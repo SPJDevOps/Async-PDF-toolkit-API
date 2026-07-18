@@ -1,20 +1,24 @@
 import asyncio
 import os
-import shutil
-import tempfile
-from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
-from starlette.background import BackgroundTask
+
+from app.services.pdf_jobs import (
+    UploadTooLargeError,
+    TooManyPagesError,
+    background_cleanup,
+    cleanup_dir,
+    enforce_pdf_page_limit,
+    http_for_job_error,
+    make_job_tempdir,
+    run_bounded_job,
+    save_upload_to_path,
+    validate_pdf_upload,
+)
 
 router = APIRouter(tags=["ocr"])
-
-
-def _save_uploaded_pdf(upload: UploadFile, input_path: str) -> None:
-    with Path(input_path).open("wb") as output_file:
-        shutil.copyfileobj(upload.file, output_file)
 
 
 def _run_ocr(
@@ -48,17 +52,19 @@ async def post_ocr(
     force_ocr: bool = Query(default=False),
     optimize: int | None = Query(default=None, ge=0, le=3),
 ) -> FileResponse:
-    has_pdf_filename = bool(file.filename and file.filename.lower().endswith(".pdf"))
-    if file.content_type != "application/pdf" and not has_pdf_filename:
-        raise HTTPException(status_code=400, detail="Uploaded file must be a PDF.")
+    validate_pdf_upload(file)
 
-    temp_dir = tempfile.mkdtemp(prefix="ocr-api-")
+    temp_dir = make_job_tempdir("ocr-api-")
     input_path = os.path.join(temp_dir, "input.pdf")
     output_path = os.path.join(temp_dir, "output.pdf")
 
-    try:
+    async def _job() -> None:
         await file.seek(0)
-        await asyncio.to_thread(_save_uploaded_pdf, file, input_path)
+        await asyncio.to_thread(save_upload_to_path, file, input_path)
+        try:
+            enforce_pdf_page_limit(input_path)
+        except TooManyPagesError:
+            raise
         await asyncio.to_thread(
             _run_ocr,
             input_path,
@@ -68,8 +74,17 @@ async def post_ocr(
             force_ocr=force_ocr,
             optimize=optimize,
         )
-    except Exception as exc:
-        shutil.rmtree(temp_dir, ignore_errors=True)
+
+    try:
+        await run_bounded_job(_job)
+    except (UploadTooLargeError, TooManyPagesError, TimeoutError, Exception) as exc:
+        cleanup_dir(temp_dir)
+        if isinstance(exc, (UploadTooLargeError, TooManyPagesError, TimeoutError)):
+            raise http_for_job_error(
+                exc, failure_prefix="OCR processing failed"
+            ) from exc
+        if isinstance(exc, HTTPException):
+            raise
         raise HTTPException(
             status_code=500, detail=f"OCR processing failed: {exc}"
         ) from exc
@@ -80,5 +95,5 @@ async def post_ocr(
         output_path,
         media_type="application/pdf",
         filename="ocr-output.pdf",
-        background=BackgroundTask(shutil.rmtree, temp_dir, True),
+        background=background_cleanup(temp_dir),
     )

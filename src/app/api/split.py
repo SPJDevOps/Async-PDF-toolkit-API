@@ -1,25 +1,29 @@
 import asyncio
 import io
 import os
-import shutil
-import tempfile
 import zipfile
-from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
-from starlette.background import BackgroundTask
+
+from app.services.pdf_jobs import (
+    UploadTooLargeError,
+    TooManyPagesError,
+    background_cleanup,
+    cleanup_dir,
+    enforce_pdf_page_limit,
+    http_for_job_error,
+    make_job_tempdir,
+    run_bounded_job,
+    save_upload_to_path,
+    validate_pdf_upload,
+)
 
 router = APIRouter(tags=["split"])
 
 
 class _EmptyPdfError(Exception):
     """Raised when the PDF has zero pages (caller maps to HTTP 400)."""
-
-
-def _save_uploaded_pdf(upload: UploadFile, input_path: str) -> None:
-    with Path(input_path).open("wb") as output_file:
-        shutil.copyfileobj(upload.file, output_file)
 
 
 def _split_pdf_to_zip(input_path: str, zip_path: str) -> None:
@@ -55,29 +59,34 @@ def _split_pdf_to_zip(input_path: str, zip_path: str) -> None:
 
 @router.post("/split")
 async def post_split(file: UploadFile = File(...)) -> FileResponse:
-    has_pdf_filename = bool(file.filename and file.filename.lower().endswith(".pdf"))
-    if file.content_type != "application/pdf" and not has_pdf_filename:
-        raise HTTPException(status_code=400, detail="Uploaded file must be a PDF.")
+    validate_pdf_upload(file)
 
-    temp_dir = tempfile.mkdtemp(prefix="ocr-api-split-")
+    temp_dir = make_job_tempdir("ocr-api-split-")
     input_path = os.path.join(temp_dir, "input.pdf")
     zip_path = os.path.join(temp_dir, "split-pages.zip")
 
-    try:
+    async def _job() -> None:
         await file.seek(0)
-        await asyncio.to_thread(_save_uploaded_pdf, file, input_path)
-        try:
-            await asyncio.to_thread(_split_pdf_to_zip, input_path, zip_path)
-        except _EmptyPdfError as exc:
-            shutil.rmtree(temp_dir, ignore_errors=True)
-            raise HTTPException(status_code=400, detail="PDF has no pages.") from exc
+        await asyncio.to_thread(save_upload_to_path, file, input_path)
+        page_count = enforce_pdf_page_limit(input_path)
+        if page_count == 0:
+            raise _EmptyPdfError()
+        await asyncio.to_thread(_split_pdf_to_zip, input_path, zip_path)
+
+    try:
+        await run_bounded_job(_job)
+    except _EmptyPdfError as exc:
+        cleanup_dir(temp_dir)
+        raise HTTPException(status_code=400, detail="PDF has no pages.") from exc
+    except (UploadTooLargeError, TooManyPagesError, TimeoutError) as exc:
+        cleanup_dir(temp_dir)
+        raise http_for_job_error(exc, failure_prefix="PDF split failed") from exc
     except HTTPException:
+        cleanup_dir(temp_dir)
         raise
     except Exception as exc:
-        shutil.rmtree(temp_dir, ignore_errors=True)
-        raise HTTPException(
-            status_code=500, detail=f"PDF split failed: {exc}"
-        ) from exc
+        cleanup_dir(temp_dir)
+        raise HTTPException(status_code=500, detail=f"PDF split failed: {exc}") from exc
     finally:
         await file.close()
 
@@ -85,5 +94,5 @@ async def post_split(file: UploadFile = File(...)) -> FileResponse:
         zip_path,
         media_type="application/zip",
         filename="split-pages.zip",
-        background=BackgroundTask(shutil.rmtree, temp_dir, True),
+        background=background_cleanup(temp_dir),
     )

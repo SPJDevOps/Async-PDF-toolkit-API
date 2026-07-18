@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Async PDF Toolkit</title>
+    <link rel="stylesheet" href="/ui/styles.css" />
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="page">
+      <header class="hero">
+        <p class="eyebrow">async-pdf-ocr</p>
+        <h1>Async PDF Toolkit</h1>
+        <p class="lede">
+          OCR, QR scan, split, merge, and extract text — upload a PDF, get a
+          result. Nothing is stored after the response.
+        </p>
+        <p class="links">
+          <a href="/docs">API docs</a>
+          <span aria-hidden="true">·</span>
+          <a href="/health">Health</a>
+        </p>
+      </header>
+
+      <main class="workspace">
+        <nav class="tools" role="tablist" aria-label="PDF tools">
+          <button type="button" class="tool is-active" data-tool="ocr" role="tab" aria-selected="true">OCR</button>
+          <button type="button" class="tool" data-tool="qr" role="tab" aria-selected="false">QR</button>
+          <button type="button" class="tool" data-tool="split" role="tab" aria-selected="false">Split</button>
+          <button type="button" class="tool" data-tool="merge" role="tab" aria-selected="false">Merge</button>
+          <button type="button" class="tool" data-tool="extract-text" role="tab" aria-selected="false">Extract text</button>
+        </nav>
+
+        <form id="job-form" class="panel" novalidate>
+          <div class="field" data-show="single">
+            <label for="file-input">PDF file</label>
+            <input id="file-input" name="file" type="file" accept="application/pdf,.pdf" />
+          </div>
+
+          <div class="field is-hidden" data-show="merge">
+            <label for="files-input">PDF files (2 or more)</label>
+            <input id="files-input" name="files" type="file" accept="application/pdf,.pdf" multiple />
+          </div>
+
+          <div class="options is-hidden" data-options="ocr">
+            <div class="field-row">
+              <div class="field">
+                <label for="language">Language</label>
+                <input id="language" type="text" placeholder="eng" maxlength="32" autocomplete="off" />
+              </div>
+              <div class="field">
+                <label for="optimize">Optimize (0–3)</label>
+                <input id="optimize" type="number" min="0" max="3" step="1" placeholder="—" />
+              </div>
+            </div>
+            <div class="checks">
+              <label class="check"><input id="deskew" type="checkbox" /> Deskew</label>
+              <label class="check"><input id="force_ocr" type="checkbox" /> Force OCR</label>
+            </div>
+          </div>
+
+          <div class="options is-hidden" data-options="extract-text">
+            <label class="check">
+              <input id="join_pages" type="checkbox" checked />
+              Join pages into one string
+            </label>
+          </div>
+
+          <details class="advanced">
+            <summary>API key (optional)</summary>
+            <p class="hint">
+              Only needed when the server has <code>API_KEY</code> set. Stored in
+              this tab’s session only.
+            </p>
+            <label for="api-key" class="sr-only">API key</label>
+            <input
+              id="api-key"
+              type="password"
+              autocomplete="off"
+              placeholder="X-API-Key value"
+            />
+          </details>
+
+          <div class="actions">
+            <button type="submit" id="submit-btn" class="primary">Run</button>
+            <p id="status" class="status" role="status" aria-live="polite"></p>
+          </div>
+        </form>
+
+        <section id="result" class="result is-hidden" aria-live="polite">
+          <h2>Result</h2>
+          <div id="result-body"></div>
+        </section>
+      </main>
+
+      <footer class="foot">
+        <p>
+          Privacy: uploads are processed ephemerally in temporary files and deleted
+          after each response. They are not retained on the server.
+        </p>
+      </footer>
+    </div>
+    <script src="/ui/app.js" defer></script>
+  </body>
+</html>

@@ -1,17 +1,21 @@
 import asyncio
 import os
-import shutil
-import tempfile
-from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, UploadFile
+
+from app.services.pdf_jobs import (
+    UploadTooLargeError,
+    TooManyPagesError,
+    cleanup_dir,
+    enforce_pdf_page_limit,
+    http_for_job_error,
+    make_job_tempdir,
+    run_bounded_job,
+    save_upload_to_path,
+    validate_pdf_upload,
+)
 
 router = APIRouter(tags=["qr"])
-
-
-def _save_uploaded_pdf(upload: UploadFile, input_path: str) -> None:
-    with Path(input_path).open("wb") as output_file:
-        shutil.copyfileobj(upload.file, output_file)
 
 
 def _extract_qr_codes(input_path: str) -> list[str]:
@@ -63,24 +67,34 @@ def _extract_qr_codes(input_path: str) -> list[str]:
 
 @router.post("/qr")
 async def post_qr(file: UploadFile = File(...)) -> dict[str, list[str]]:
-    has_pdf_filename = bool(file.filename and file.filename.lower().endswith(".pdf"))
-    if file.content_type != "application/pdf" and not has_pdf_filename:
-        raise HTTPException(status_code=400, detail="Uploaded file must be a PDF.")
+    validate_pdf_upload(file)
 
-    temp_dir = tempfile.mkdtemp(prefix="ocr-api-qr-")
+    temp_dir = make_job_tempdir("ocr-api-qr-")
     input_path = os.path.join(temp_dir, "input.pdf")
     try:
-        try:
-            await file.seek(0)
-            await asyncio.to_thread(_save_uploaded_pdf, file, input_path)
-        except Exception:
-            return {"qr_codes": []}
+
+        async def _job() -> list[str]:
+            try:
+                await file.seek(0)
+                await asyncio.to_thread(save_upload_to_path, file, input_path)
+            except UploadTooLargeError:
+                raise
+            except Exception:
+                return []
+            try:
+                enforce_pdf_page_limit(input_path)
+            except TooManyPagesError:
+                raise
+            try:
+                return await asyncio.to_thread(_extract_qr_codes, input_path)
+            except Exception:
+                return []
 
         try:
-            results = await asyncio.to_thread(_extract_qr_codes, input_path)
-        except Exception:
-            results = []
+            results = await run_bounded_job(_job)
+        except (UploadTooLargeError, TooManyPagesError, TimeoutError) as exc:
+            raise http_for_job_error(exc, failure_prefix="QR scan failed") from exc
         return {"qr_codes": results}
     finally:
-        shutil.rmtree(temp_dir, ignore_errors=True)
+        cleanup_dir(temp_dir)
         await file.close()

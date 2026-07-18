@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "async-pdf-ocr"
 version = "0.1.0"
-description = "async-pdf-ocr: Async FastAPI HTTP API for OCRmyPDF (Docker/Kubernetes-friendly)"
+description = "Async PDF toolkit API: OCR, QR, split, merge, extract-text (Docker/Kubernetes-friendly)"
 readme = "README.md"
 requires-python = ">=3.13"
 authors = [{ name = "OCR API Contributors" }]
@@ -33,7 +33,7 @@ package-dir = {"" = "src"}
 where = ["src"]
 
 [tool.setuptools.package-data]
-app = ["static/swagger-ui/*"]
+app = ["static/swagger-ui/*", "static/ui/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

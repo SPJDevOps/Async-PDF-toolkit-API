@@ -1,35 +1,86 @@
 from pathlib import Path
 
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.openapi.docs import (
     get_swagger_ui_html,
     get_swagger_ui_oauth2_redirect_html,
 )
 from fastapi.staticfiles import StaticFiles
 
+from app.api.extract_text import router as extract_text_router
 from app.api.health import router as health_router
+from app.api.merge import router as merge_router
 from app.api.ocr import router as ocr_router
 from app.api.qr import router as qr_router
 from app.api.split import router as split_router
 from app.config import get_settings
+from app.middleware.api_key import ApiKeyMiddleware
+from app.middleware.rate_limit import RateLimitMiddleware
 
-_OPENAPI_DOCS_STATIC = Path(__file__).resolve().parent / "static"
+_STATIC_DIR = Path(__file__).resolve().parent / "static"
+_UI_DIR = _STATIC_DIR / "ui"
+
+_OPENAPI_DESCRIPTION = """
+Async PDF toolkit: OCR, QR extraction, split, merge, and native text extraction.
+
+- **Demo UI:** [`/`](/) — upload, run a tool, download or view results
+- **OpenAPI (offline):** [`/docs`](/docs)
+- **Auth:** optional. When `API_KEY` is set, send header `X-API-Key` on job endpoints.
+  Leave unset for local/dev and open public demos (use tight rate/size limits instead).
+
+Uploads are processed in temporary files and deleted after each response; nothing is retained.
+""".strip()
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
         title=settings.app_name,
+        description=_OPENAPI_DESCRIPTION,
         debug=settings.app_debug,
         docs_url=None,
         redoc_url=None,
     )
+    # Last added runs first: size guard (below) → API key → rate limit → routes.
+    app.add_middleware(RateLimitMiddleware)
+    app.add_middleware(ApiKeyMiddleware)
+
+    @app.middleware("http")
+    async def reject_oversized_content_length(request: Request, call_next):
+        content_length = request.headers.get("content-length")
+        if content_length is not None:
+            try:
+                length = int(content_length)
+            except ValueError:
+                length = -1
+            max_bytes = get_settings().max_upload_bytes
+            # Coarse guard for clearly huge bodies; per-file limits apply while saving.
+            if length > max_bytes * 10:
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "detail": (
+                            f"Request body exceeds maximum size of {max_bytes} bytes."
+                        )
+                    },
+                )
+        return await call_next(request)
+
     app.mount(
         "/openapi-docs-static",
-        StaticFiles(directory=str(_OPENAPI_DOCS_STATIC)),
+        StaticFiles(directory=str(_STATIC_DIR)),
         name="openapi_docs_static",
     )
+    app.mount(
+        "/ui",
+        StaticFiles(directory=str(_UI_DIR)),
+        name="ui",
+    )
+
+    @app.get("/", include_in_schema=False)
+    async def demo_ui() -> FileResponse:
+        return FileResponse(_UI_DIR / "index.html", media_type="text/html")
 
     @app.get("/docs", include_in_schema=False)
     async def swagger_ui_html() -> HTMLResponse:
@@ -50,6 +101,8 @@ def create_app() -> FastAPI:
     app.include_router(ocr_router)
     app.include_router(qr_router)
     app.include_router(split_router)
+    app.include_router(merge_router)
+    app.include_router(extract_text_router)
     return app
 
 
