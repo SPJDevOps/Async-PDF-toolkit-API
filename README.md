@@ -9,35 +9,29 @@ Temporary files are deleted after each response; uploads are not retained.
 ## Requirements
 
 - Python 3.13
+- [uv](https://docs.astral.sh/uv/)
 
 ## Quickstart
 
-1. Create and activate a virtual environment:
+1. Install dependencies (uv creates `.venv` automatically):
 
    ```bash
-   python3.13 -m venv .venv
-   source .venv/bin/activate
+   uv sync --group dev
    ```
 
-2. Install dependencies:
-
-   ```bash
-   pip install -e ".[dev]"
-   ```
-
-3. Configure environment:
+2. Configure environment:
 
    ```bash
    cp .env.example .env
    ```
 
-4. Run the API:
+3. Run the API:
 
    ```bash
-   uvicorn app.main:app --reload
+   uv run uvicorn app.main:app --reload
    ```
 
-5. Open the demo UI, docs, or health check:
+4. Open the demo UI, docs, or health check:
 
    - UI: http://127.0.0.1:8000/
    - OpenAPI (offline Swagger): http://127.0.0.1:8000/docs
@@ -202,7 +196,7 @@ curl -X POST "http://127.0.0.1:8000/extract-text?join_pages=false" \
 Run tests with:
 
 ```bash
-pytest
+uv run pytest
 ```
 
 ## Project Structure
