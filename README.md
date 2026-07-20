@@ -1,8 +1,8 @@
 # async-pdf-ocr
 
-Async PDF toolkit API built with FastAPI: OCR, QR extraction, split, merge, and
-native text extraction. Designed for Docker/Kubernetes and offline-capable
-deployments (automation tools such as Apache NiFi and n8n).
+Async PDF toolkit API built with FastAPI: OCR, QR extraction, split, merge,
+native text extraction, and metadata. Designed for Docker/Kubernetes and
+offline-capable deployments (automation tools such as Apache NiFi and n8n).
 
 Temporary files are deleted after each response; uploads are not retained.
 
@@ -118,6 +118,47 @@ single-replica only—do not rely on it alone across many pods.
 For a semi-private share, set `API_KEY` and send `X-API-Key` (UI field or curl
 `-H`). Self-host and local/dev can leave it unset.
 
+## Private / internal automation (n8n, NiFi, etc.)
+
+The defaults in the Configuration table are tuned to be safe for a public
+demo, not sized for trusted internal callers. For a single-instance private
+deployment feeding from workflow tools like n8n or Apache NiFi:
+
+```bash
+-e MAX_CONCURRENT_JOBS=<cpu cores available>   # OCR is CPU-bound (ghostscript/tesseract)
+-e RATE_LIMIT_PER_MINUTE=300                   # safety valve, not traffic policing — size to real combined call volume
+-e JOB_TIMEOUT_SECONDS=600                     # raise if OCR jobs are large/slow
+-e MAX_PDF_PAGES=200                           # raise only if documents actually exceed 100 pages
+-e MAX_UPLOAD_BYTES=50000000                   # raise only if scans exceed 20MB
+-e API_KEY=<set one>                           # set even privately once real workflows depend on this
+```
+
+Watch for shared egress IPs: if n8n and NiFi call out through the same host,
+VPN, or a reverse proxy that doesn't forward the original client IP, they
+share one rate-limit bucket — the app reads `request.client.host` directly
+and does not honor `X-Forwarded-For`.
+
+## Kubernetes (multiple replicas)
+
+`MAX_CONCURRENT_JOBS` and `RATE_LIMIT_PER_MINUTE` are held in-memory per
+process. With N replicas, each pod tracks its own counters independently —
+there is no shared state (no Redis), so treat both settings as **per-pod**,
+not cluster-wide:
+
+- `MAX_CONCURRENT_JOBS`: set to the CPU cores requested/limited per pod
+  (`resources.requests.cpu` / `resources.limits.cpu`), not multiplied by
+  replica count. Cluster-wide job capacity is roughly
+  `MAX_CONCURRENT_JOBS × replicas`, assuming the Service load-balances evenly.
+- `RATE_LIMIT_PER_MINUTE`: a standard `ClusterIP` Service load-balances
+  per-connection (iptables/IPVS), not per-request. If callers hold
+  persistent/keep-alive HTTP connections, all their traffic can stick to a
+  single pod rather than spreading across replicas — size for the
+  single-pod worst case rather than assuming an even split across replicas.
+- `API_KEY` is naturally consistent across replicas since it comes from the
+  same Deployment env/Secret.
+- `JOB_TIMEOUT_SECONDS`, `MAX_PDF_PAGES`, `MAX_UPLOAD_BYTES` are unaffected
+  by replica count — size to actual document/job characteristics as above.
+
 ## OCR Endpoint
 
 Process a PDF with OCRmyPDF:
@@ -191,6 +232,36 @@ curl -X POST "http://127.0.0.1:8000/extract-text?join_pages=false" \
 - `join_pages` (optional bool, default `true`): when `true`, response is
   `{"text": "..."}`; when `false`, `{"pages": ["...", ...]}`
 
+## Metadata Endpoint
+
+Return JSON metadata about a PDF: page count, whether it has a native text
+layer, encryption status, PDF version, document info (`/Info` dict), and
+whether it contains digital signature form fields.
+
+```bash
+curl -X POST "http://127.0.0.1:8000/metadata" -F "file=@/path/to/input.pdf"
+```
+
+"Signature" here means an AcroForm digital signature field (`/FT /Sig`), not
+a scanned/handwritten signature image — the project has no computer-vision
+dependencies for that kind of visual detection. The response distinguishes
+an empty signature field from an actually-signed one:
+
+```json
+{
+  "filename": "example.pdf",
+  "file_size_bytes": 123456,
+  "page_count": 5,
+  "is_encrypted": false,
+  "pdf_version": "1.7",
+  "has_text": true,
+  "has_form_fields": true,
+  "has_signature_fields": true,
+  "is_signed": true,
+  "info": { "title": "...", "author": "..." }
+}
+```
+
 ## Tests
 
 Run tests with:
@@ -215,4 +286,5 @@ uv run pytest
 - `src/app/api/split.py` - PDF split-to-ZIP endpoint
 - `src/app/api/merge.py` - PDF merge endpoint
 - `src/app/api/extract_text.py` - native text extraction endpoint
+- `src/app/api/metadata.py` - PDF metadata endpoint
 - `tests/` - API tests

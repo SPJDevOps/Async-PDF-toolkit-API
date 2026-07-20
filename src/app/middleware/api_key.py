@@ -16,6 +16,7 @@ _PROTECTED_PREFIXES = (
     "/split",
     "/merge",
     "/extract-text",
+    "/metadata",
 )
 
 

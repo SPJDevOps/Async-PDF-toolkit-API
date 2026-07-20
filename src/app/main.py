@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.extract_text import router as extract_text_router
 from app.api.health import router as health_router
 from app.api.merge import router as merge_router
+from app.api.metadata import router as metadata_router
 from app.api.ocr import router as ocr_router
 from app.api.qr import router as qr_router
 from app.api.split import router as split_router
@@ -22,7 +23,7 @@ _STATIC_DIR = Path(__file__).resolve().parent / "static"
 _UI_DIR = _STATIC_DIR / "ui"
 
 _OPENAPI_DESCRIPTION = """
-Async PDF toolkit: OCR, QR extraction, split, merge, and native text extraction.
+Async PDF toolkit: OCR, QR extraction, split, merge, native text extraction, and metadata.
 
 - **Demo UI:** [`/`](/) — upload, run a tool, download or view results
 - **OpenAPI (offline):** [`/docs`](/docs)
@@ -103,6 +104,7 @@ def create_app() -> FastAPI:
     app.include_router(split_router)
     app.include_router(merge_router)
     app.include_router(extract_text_router)
+    app.include_router(metadata_router)
     return app
 
 
