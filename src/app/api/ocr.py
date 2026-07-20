@@ -29,12 +29,20 @@ def _run_ocr(
     deskew: bool,
     force_ocr: bool,
     optimize: int | None,
+    rotate_pages: bool,
+    skip_text: bool,
+    clean: bool,
+    remove_background: bool,
 ) -> None:
     import ocrmypdf
 
     options: dict[str, Any] = {
         "deskew": deskew,
         "force_ocr": force_ocr,
+        "rotate_pages": rotate_pages,
+        "skip_text": skip_text,
+        "clean": clean,
+        "remove_background": remove_background,
     }
     if language:
         options["language"] = language
@@ -47,10 +55,54 @@ def _run_ocr(
 @router.post("/ocr")
 async def post_ocr(
     file: UploadFile = File(...),
-    language: str | None = Query(default=None, min_length=2, max_length=32),
-    deskew: bool = Query(default=False),
-    force_ocr: bool = Query(default=False),
-    optimize: int | None = Query(default=None, ge=0, le=3),
+    language: str | None = Query(
+        default=None,
+        min_length=2,
+        max_length=32,
+        description="Tesseract OCR language code(s), e.g. 'eng' or 'eng+deu' for multiple.",
+    ),
+    deskew: bool = Query(
+        default=False, description="Deskew (straighten) each page before OCR."
+    ),
+    force_ocr: bool = Query(
+        default=False,
+        description=(
+            "Rasterize and OCR every page, discarding any existing "
+            "text/vector content. Mutually exclusive with skip_text."
+        ),
+    ),
+    optimize: int | None = Query(
+        default=None,
+        ge=0,
+        le=3,
+        description=(
+            "Post-OCR PDF optimization level: 0 = none, 1 = safe lossless "
+            "(default), 2 = lossy JPEG/JPEG2000 recompression, "
+            "3 = more aggressive lossy recompression."
+        ),
+    ),
+    rotate_pages: bool = Query(
+        default=False,
+        description="Automatically rotate pages based on detected text orientation.",
+    ),
+    skip_text: bool = Query(
+        default=False,
+        description=(
+            "Skip OCR on pages that already contain text, but keep them in "
+            "the output. Mutually exclusive with force_ocr."
+        ),
+    ),
+    clean: bool = Query(
+        default=False,
+        description=(
+            "Clean scanning artifacts (via unpaper) before OCR to improve "
+            "accuracy; the cleaned image is not included in the final output."
+        ),
+    ),
+    remove_background: bool = Query(
+        default=False,
+        description="Remove gray/color background from scanned pages, setting it to white.",
+    ),
 ) -> FileResponse:
     validate_pdf_upload(file)
 
@@ -73,6 +125,10 @@ async def post_ocr(
             deskew=deskew,
             force_ocr=force_ocr,
             optimize=optimize,
+            rotate_pages=rotate_pages,
+            skip_text=skip_text,
+            clean=clean,
+            remove_background=remove_background,
         )
 
     try:

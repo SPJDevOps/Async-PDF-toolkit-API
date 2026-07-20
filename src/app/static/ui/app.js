@@ -105,6 +105,18 @@
         url.searchParams.set("force_ocr", "true");
       }
       if (optimize !== "") url.searchParams.set("optimize", optimize);
+      if (document.getElementById("rotate_pages").checked) {
+        url.searchParams.set("rotate_pages", "true");
+      }
+      if (document.getElementById("skip_text").checked) {
+        url.searchParams.set("skip_text", "true");
+      }
+      if (document.getElementById("clean").checked) {
+        url.searchParams.set("clean", "true");
+      }
+      if (document.getElementById("remove_background").checked) {
+        url.searchParams.set("remove_background", "true");
+      }
     }
     if (activeTool === "extract-text") {
       url.searchParams.set(
