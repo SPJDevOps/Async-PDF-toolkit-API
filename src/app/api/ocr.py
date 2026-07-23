@@ -32,7 +32,6 @@ def _run_ocr(
     rotate_pages: bool,
     skip_text: bool,
     clean: bool,
-    remove_background: bool,
 ) -> None:
     import ocrmypdf
 
@@ -42,7 +41,6 @@ def _run_ocr(
         "rotate_pages": rotate_pages,
         "skip_text": skip_text,
         "clean": clean,
-        "remove_background": remove_background,
     }
     if language:
         options["language"] = language
@@ -99,10 +97,6 @@ async def post_ocr(
             "accuracy; the cleaned image is not included in the final output."
         ),
     ),
-    remove_background: bool = Query(
-        default=False,
-        description="Remove gray/color background from scanned pages, setting it to white.",
-    ),
 ) -> FileResponse:
     validate_pdf_upload(file)
 
@@ -128,7 +122,6 @@ async def post_ocr(
             rotate_pages=rotate_pages,
             skip_text=skip_text,
             clean=clean,
-            remove_background=remove_background,
         )
 
     try:

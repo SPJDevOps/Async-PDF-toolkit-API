@@ -47,7 +47,6 @@ def test_ocr_endpoint_passes_query_parameters(monkeypatch) -> None:
         rotate_pages: bool,
         skip_text: bool,
         clean: bool,
-        remove_background: bool,
     ) -> None:
         captured.update(
             {
@@ -58,7 +57,6 @@ def test_ocr_endpoint_passes_query_parameters(monkeypatch) -> None:
                 "rotate_pages": rotate_pages,
                 "skip_text": skip_text,
                 "clean": clean,
-                "remove_background": remove_background,
             }
         )
         with open(output_path, "wb") as dst:
@@ -69,7 +67,7 @@ def test_ocr_endpoint_passes_query_parameters(monkeypatch) -> None:
     client = TestClient(app)
     response = client.post(
         "/ocr?language=eng&deskew=true&force_ocr=true&optimize=2"
-        "&rotate_pages=true&skip_text=false&clean=true&remove_background=false",
+        "&rotate_pages=true&skip_text=false&clean=true",
         files={"file": ("sample.pdf", b"%PDF-1.4\n", "application/pdf")},
     )
 
@@ -82,7 +80,6 @@ def test_ocr_endpoint_passes_query_parameters(monkeypatch) -> None:
         "rotate_pages": True,
         "skip_text": False,
         "clean": True,
-        "remove_background": False,
     }
 
 

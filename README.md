@@ -192,8 +192,6 @@ behavior. Descriptions are also shown in the interactive API docs at `/docs`.
 - `clean` (optional bool, default `false`): clean scanning artifacts (via
   `unpaper`) before OCR to improve accuracy; the cleaned image is not
   included in the final output
-- `remove_background` (optional bool, default `false`): remove gray/color
-  background from scanned pages, setting it to white
 - `optimize` (optional int `0-3`, OCRmyPDF defaults to `1` if omitted):
   post-OCR PDF optimization level — `0` = none, `1` = safe lossless
   (default), `2` = lossy JPEG/JPEG2000 recompression, `3` = more aggressive

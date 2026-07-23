@@ -21,6 +21,17 @@ from app.middleware.rate_limit import RateLimitMiddleware
 
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
 _UI_DIR = _STATIC_DIR / "ui"
+_UI_NO_CACHE = {"Cache-Control": "no-cache"}
+
+
+def _ui_asset_version() -> str:
+    mtimes: list[int] = []
+    for name in ("app.js", "styles.css", "index.html"):
+        path = _UI_DIR / name
+        if path.is_file():
+            mtimes.append(path.stat().st_mtime_ns)
+    return str(max(mtimes) if mtimes else 0)
+
 
 _OPENAPI_DESCRIPTION = """
 Async PDF toolkit: OCR, QR extraction, split, merge, native text extraction, and metadata.
@@ -68,6 +79,22 @@ def create_app() -> FastAPI:
                 )
         return await call_next(request)
 
+    @app.get("/ui/app.js", include_in_schema=False)
+    async def ui_app_js() -> FileResponse:
+        return FileResponse(
+            _UI_DIR / "app.js",
+            media_type="application/javascript",
+            headers=_UI_NO_CACHE,
+        )
+
+    @app.get("/ui/styles.css", include_in_schema=False)
+    async def ui_styles_css() -> FileResponse:
+        return FileResponse(
+            _UI_DIR / "styles.css",
+            media_type="text/css",
+            headers=_UI_NO_CACHE,
+        )
+
     app.mount(
         "/openapi-docs-static",
         StaticFiles(directory=str(_STATIC_DIR)),
@@ -80,8 +107,10 @@ def create_app() -> FastAPI:
     )
 
     @app.get("/", include_in_schema=False)
-    async def demo_ui() -> FileResponse:
-        return FileResponse(_UI_DIR / "index.html", media_type="text/html")
+    async def demo_ui() -> HTMLResponse:
+        html = (_UI_DIR / "index.html").read_text(encoding="utf-8")
+        html = html.replace("__UI_ASSET_V__", _ui_asset_version())
+        return HTMLResponse(content=html, headers=_UI_NO_CACHE)
 
     @app.get("/docs", include_in_schema=False)
     async def swagger_ui_html() -> HTMLResponse:

@@ -98,25 +98,10 @@
       const language = document.getElementById("language").value.trim();
       const optimize = document.getElementById("optimize").value;
       if (language) url.searchParams.set("language", language);
-      if (document.getElementById("deskew").checked) {
-        url.searchParams.set("deskew", "true");
-      }
-      if (document.getElementById("force_ocr").checked) {
-        url.searchParams.set("force_ocr", "true");
-      }
       if (optimize !== "") url.searchParams.set("optimize", optimize);
-      if (document.getElementById("rotate_pages").checked) {
-        url.searchParams.set("rotate_pages", "true");
-      }
-      if (document.getElementById("skip_text").checked) {
-        url.searchParams.set("skip_text", "true");
-      }
-      if (document.getElementById("clean").checked) {
-        url.searchParams.set("clean", "true");
-      }
-      if (document.getElementById("remove_background").checked) {
-        url.searchParams.set("remove_background", "true");
-      }
+      document.querySelectorAll("[data-ocr-param]").forEach((el) => {
+        if (el.checked) url.searchParams.set(el.dataset.ocrParam, "true");
+      });
     }
     if (activeTool === "extract-text") {
       url.searchParams.set(

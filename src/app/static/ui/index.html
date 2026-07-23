@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Async PDF Toolkit</title>
-    <link rel="stylesheet" href="/ui/styles.css" />
+    <link rel="stylesheet" href="/ui/styles.css?v=__UI_ASSET_V__" />
   </head>
   <body>
     <div class="grain" aria-hidden="true"></div>
@@ -55,12 +55,11 @@
               </div>
             </div>
             <div class="checks">
-              <label class="check"><input id="deskew" type="checkbox" /> Deskew</label>
-              <label class="check"><input id="force_ocr" type="checkbox" /> Force OCR</label>
-              <label class="check"><input id="rotate_pages" type="checkbox" /> Rotate pages</label>
-              <label class="check"><input id="skip_text" type="checkbox" /> Skip text</label>
-              <label class="check"><input id="clean" type="checkbox" /> Clean</label>
-              <label class="check"><input id="remove_background" type="checkbox" /> Remove background</label>
+              <label class="check"><input id="deskew" type="checkbox" data-ocr-param="deskew" /> Deskew</label>
+              <label class="check"><input id="force_ocr" type="checkbox" data-ocr-param="force_ocr" /> Force OCR</label>
+              <label class="check"><input id="rotate_pages" type="checkbox" data-ocr-param="rotate_pages" /> Rotate pages</label>
+              <label class="check"><input id="skip_text" type="checkbox" data-ocr-param="skip_text" /> Skip text</label>
+              <label class="check"><input id="clean" type="checkbox" data-ocr-param="clean" /> Clean</label>
             </div>
           </div>
 
@@ -105,6 +104,6 @@
         </p>
       </footer>
     </div>
-    <script src="/ui/app.js" defer></script>
+    <script src="/ui/app.js?v=__UI_ASSET_V__" defer></script>
   </body>
 </html>
