@@ -14,7 +14,7 @@ dependencies = [
   "uvicorn[standard]>=0.51.0",
   "pydantic-settings>=2.4.0",
   "python-multipart>=0.0.20",
-  "ocrmypdf>=16.0.0",
+  "ocrmypdf>=17.10.0",
   "pypdfium2>=4.30.0",
   "pyzbar>=0.1.9",
 ]

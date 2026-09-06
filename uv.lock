@@ -56,7 +56,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115.0" },
-    { name = "ocrmypdf", specifier = ">=16.0.0" },
+    { name = "ocrmypdf", specifier = ">=17.10.0" },
     { name = "pydantic-settings", specifier = ">=2.4.0" },
     { name = "pypdfium2", specifier = ">=4.30.0" },
     { name = "python-multipart", specifier = ">=0.0.20" },
@@ -562,7 +562,7 @@ wheels = [
 
 [[package]]
 name = "ocrmypdf"
-version = "17.8.1"
+version = "17.10.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fpdf2" },
@@ -578,9 +578,9 @@ dependencies = [
     { name = "rich" },
     { name = "uharfbuzz" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f7/2e/7d429156859602ffc9929ffb014eb11da931e653a21c64d5cabfc30c3ccd/ocrmypdf-17.8.1.tar.gz", hash = "sha256:6f72e4da5fd7805e5d677c0fc55ad380c70e1c7ad33dd9ce2402575194803e08", size = 7451173, upload-time = "2026-07-16T20:55:09.412Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/20/2e/96c9912ad50fe3e186f0d3580d06d27ac2300fcc178d7457794f4bcaf3b8/ocrmypdf-17.10.0.tar.gz", hash = "sha256:3e80a22e7ca9a746034e990414c9f18791f168800f3ede92101504f45be6129c", size = 7499394, upload-time = "2026-08-05T00:25:50.595Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/95/29/ce4e14fbb63ea7a1d5749ac97ccafe60e915d50ad3c4a06fddd782e952d2/ocrmypdf-17.8.1-py3-none-any.whl", hash = "sha256:df236ea84b6c5d9d1979fd410ca786b67da428a9e6cb0b26654e3039ac129704", size = 514050, upload-time = "2026-07-16T20:55:07.497Z" },
+    { url = "https://files.pythonhosted.org/packages/39/6b/29a4c5f4e67d16bff32f706bf338d443761fe4933b9be4067e958db04aaa/ocrmypdf-17.10.0-py3-none-any.whl", hash = "sha256:34ba1b595ecacc94b6dc3c9d4fa51953de63082cd16cf8595251bd72120b930a", size = 523170, upload-time = "2026-08-05T00:25:48.734Z" },
 ]
 
 [[package]]
