@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "async-pdf-ocr"
 version = "0.1.0"
-description = "Async PDF toolkit API: OCR, QR, split, merge, extract-text (Docker/Kubernetes-friendly)"
+description = "Async PDF toolkit API: OCR, QR, split, merge, extract-text, metadata, to-image (Docker/Kubernetes-friendly)"
 readme = "README.md"
 requires-python = ">=3.13"
 authors = [{ name = "OCR API Contributors" }]

@@ -47,3 +47,19 @@ def test_demo_ui_ocr_checkbox_params_are_wired() -> None:
     assert params == _EXPECTED_OCR_PARAMS
     assert "[data-ocr-param]" in js
     assert "dataset.ocrParam" in js
+
+
+def test_demo_ui_to_image_tool_is_wired() -> None:
+    client = TestClient(app)
+    html = client.get("/").text
+    js = client.get("/ui/app.js").text
+
+    assert 'data-tool="to-image"' in html
+    assert 'data-options="to-image"' in html
+    assert 'id="to-image-dpi"' in html
+    assert 'id="to-image-page"' in html
+    assert '"to-image"' in js
+    assert 'path: "/to-image"' in js
+    assert "to-image-dpi" in js
+    assert "to-image-page" in js
+    assert "preview" in js

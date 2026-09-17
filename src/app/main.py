@@ -15,6 +15,7 @@ from app.api.metadata import router as metadata_router
 from app.api.ocr import router as ocr_router
 from app.api.qr import router as qr_router
 from app.api.split import router as split_router
+from app.api.to_image import router as to_image_router
 from app.config import get_settings
 from app.middleware.api_key import ApiKeyMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
@@ -34,7 +35,7 @@ def _ui_asset_version() -> str:
 
 
 _OPENAPI_DESCRIPTION = """
-Async PDF toolkit: OCR, QR extraction, split, merge, native text extraction, and metadata.
+Async PDF toolkit: OCR, QR extraction, split, merge, native text extraction, metadata, and PDF-to-image.
 
 - **Demo UI:** [`/`](/) — upload, run a tool, download or view results
 - **OpenAPI (offline):** [`/docs`](/docs)
@@ -134,6 +135,7 @@ def create_app() -> FastAPI:
     app.include_router(merge_router)
     app.include_router(extract_text_router)
     app.include_router(metadata_router)
+    app.include_router(to_image_router)
     return app
 
 

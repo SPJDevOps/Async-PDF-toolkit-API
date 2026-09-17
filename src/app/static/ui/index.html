@@ -13,8 +13,8 @@
         <p class="eyebrow">async-pdf-ocr</p>
         <h1>Async PDF Toolkit</h1>
         <p class="lede">
-          OCR, QR scan, split, merge, and extract text — upload a PDF, get a
-          result. Nothing is stored after the response.
+          OCR, QR scan, split, merge, extract text, and PDF-to-image — upload a
+          PDF, get a result. Nothing is stored after the response.
         </p>
         <p class="links">
           <a href="/docs">API docs</a>
@@ -30,6 +30,7 @@
           <button type="button" class="tool" data-tool="split" role="tab" aria-selected="false">Split</button>
           <button type="button" class="tool" data-tool="merge" role="tab" aria-selected="false">Merge</button>
           <button type="button" class="tool" data-tool="extract-text" role="tab" aria-selected="false">Extract text</button>
+          <button type="button" class="tool" data-tool="to-image" role="tab" aria-selected="false">To image</button>
         </nav>
 
         <form id="job-form" class="panel" novalidate>
@@ -68,6 +69,19 @@
               <input id="join_pages" type="checkbox" checked />
               Join pages into one string
             </label>
+          </div>
+
+          <div class="options is-hidden" data-options="to-image">
+            <div class="field-row">
+              <div class="field">
+                <label for="to-image-dpi">DPI</label>
+                <input id="to-image-dpi" type="number" min="72" max="600" step="1" value="300" />
+              </div>
+              <div class="field">
+                <label for="to-image-page">Page</label>
+                <input id="to-image-page" type="number" min="1" step="1" value="1" />
+              </div>
+            </div>
           </div>
 
           <details class="advanced">

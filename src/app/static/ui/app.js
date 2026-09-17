@@ -10,6 +10,12 @@
       result: "json",
       label: "Extract text",
     },
+    "to-image": {
+      path: "/to-image",
+      mode: "file",
+      result: "blob",
+      label: "To image",
+    },
   };
 
   const form = document.getElementById("job-form");
@@ -109,6 +115,12 @@
         document.getElementById("join_pages").checked ? "true" : "false",
       );
     }
+    if (activeTool === "to-image") {
+      const dpi = document.getElementById("to-image-dpi").value;
+      const page = document.getElementById("to-image-page").value;
+      if (dpi !== "") url.searchParams.set("dpi", dpi);
+      if (page !== "") url.searchParams.set("page", page);
+    }
     return url;
   }
 
@@ -205,17 +217,34 @@
       const blob = await response.blob();
       objectUrl = URL.createObjectURL(blob);
       const fallback =
-        activeTool === "split" ? "split-pages.zip" : `${activeTool}-output.pdf`;
+        activeTool === "split"
+          ? "split-pages.zip"
+          : activeTool === "to-image"
+            ? "page-1.png"
+            : `${activeTool}-output.pdf`;
       const name = filenameFromDisposition(
         response.headers.get("content-disposition"),
         fallback,
       );
+      const wrap = document.createElement("div");
+      wrap.className = "result-blob";
+      if (
+        activeTool === "to-image" ||
+        (response.headers.get("content-type") || "").startsWith("image/")
+      ) {
+        const img = document.createElement("img");
+        img.src = objectUrl;
+        img.alt = name;
+        img.className = "preview";
+        wrap.appendChild(img);
+      }
       const link = document.createElement("a");
       link.className = "download";
       link.href = objectUrl;
       link.download = name;
       link.textContent = `Download ${name}`;
-      showResult(link);
+      wrap.appendChild(link);
+      showResult(wrap);
       setStatus("Done — download ready.", "is-ok");
     } catch (err) {
       setStatus(err?.message || "Network error.", "is-error");

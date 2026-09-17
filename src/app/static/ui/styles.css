@@ -362,6 +362,21 @@ summary:focus-visible {
   background: var(--accent);
 }
 
+.result-blob {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.result-blob .preview {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+}
+
 .foot {
   margin-top: 2.5rem;
   padding-top: 1.25rem;

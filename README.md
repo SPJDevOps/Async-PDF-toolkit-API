@@ -1,7 +1,7 @@
 # async-pdf-ocr
 
 Async PDF toolkit API built with FastAPI: OCR, QR extraction, split, merge,
-native text extraction, and metadata. Designed for Docker/Kubernetes and
+native text extraction, metadata, and PDF-to-image. Designed for Docker/Kubernetes and
 offline-capable deployments (automation tools such as Apache NiFi and n8n).
 
 Temporary files are deleted after each response; uploads are not retained.
@@ -55,8 +55,8 @@ Environment variables (see `.env.example`):
 
 ## Demo UI
 
-The same-origin demo at `/` covers OCR, QR, Split, Merge, and Extract text:
-upload → progress → download (PDF/ZIP) or JSON result.
+The same-origin demo at `/` covers OCR, QR, Split, Merge, Extract text, and
+To image: upload → progress → download (PDF/ZIP/PNG) or JSON result.
 
 If the server has `API_KEY` set, expand **API key (optional)** in the UI and
 paste the key (stored in `sessionStorage` for that tab only). Public demos
@@ -282,6 +282,22 @@ an empty signature field from an actually-signed one:
 }
 ```
 
+## To Image Endpoint
+
+Rasterize one PDF page to a PNG image. Uses pypdfium2 (already included for
+QR/split/extract). PDF user space is 72 DPI, so render scale is `dpi / 72`.
+
+```bash
+curl -X POST "http://127.0.0.1:8000/to-image?dpi=300&page=1" \
+  -F "file=@/path/to/input.pdf" \
+  --output page-1.png
+```
+
+### Supported query params
+
+- `dpi` (optional int, default `300`, range `72`–`600`): render resolution
+- `page` (optional int, default `1`, minimum `1`): 1-based page number to render
+
 ## Tests
 
 Run tests with:
@@ -307,4 +323,5 @@ uv run pytest
 - `src/app/api/merge.py` - PDF merge endpoint
 - `src/app/api/extract_text.py` - native text extraction endpoint
 - `src/app/api/metadata.py` - PDF metadata endpoint
+- `src/app/api/to_image.py` - PDF page to PNG endpoint
 - `tests/` - API tests

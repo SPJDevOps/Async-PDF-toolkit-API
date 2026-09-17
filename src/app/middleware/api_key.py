@@ -17,6 +17,7 @@ _PROTECTED_PREFIXES = (
     "/merge",
     "/extract-text",
     "/metadata",
+    "/to-image",
 )
 
 
