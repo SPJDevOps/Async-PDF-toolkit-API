@@ -562,7 +562,7 @@ wheels = [
 
 [[package]]
 name = "ocrmypdf"
-version = "17.10.0"
+version = "17.11.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fpdf2" },
@@ -578,9 +578,9 @@ dependencies = [
     { name = "rich" },
     { name = "uharfbuzz" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/20/2e/96c9912ad50fe3e186f0d3580d06d27ac2300fcc178d7457794f4bcaf3b8/ocrmypdf-17.10.0.tar.gz", hash = "sha256:3e80a22e7ca9a746034e990414c9f18791f168800f3ede92101504f45be6129c", size = 7499394, upload-time = "2026-08-05T00:25:50.595Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4c/9a/f7d7c943e07b0a28cb0958229ac480f3c51b4169ad9df030477f103b298a/ocrmypdf-17.11.0.tar.gz", hash = "sha256:8e41cbba23bba9ce20bc557576211e1829d1beaef00183bacd227b4b9482af87", size = 7544564, upload-time = "2026-08-28T22:15:37.774Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/39/6b/29a4c5f4e67d16bff32f706bf338d443761fe4933b9be4067e958db04aaa/ocrmypdf-17.10.0-py3-none-any.whl", hash = "sha256:34ba1b595ecacc94b6dc3c9d4fa51953de63082cd16cf8595251bd72120b930a", size = 523170, upload-time = "2026-08-05T00:25:48.734Z" },
+    { url = "https://files.pythonhosted.org/packages/14/85/5a996c67cf44ecd3dfb6154202c7fecefb71b5ed52ec00b6a4de46a77e15/ocrmypdf-17.11.0-py3-none-any.whl", hash = "sha256:56cc82e49e22ba0fe77585d7fe788ab951b58ff1e7f75025eafa917e37efb2a9", size = 534921, upload-time = "2026-08-28T22:15:35.815Z" },
 ]
 
 [[package]]
